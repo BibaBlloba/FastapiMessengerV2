@@ -1,0 +1,6 @@
+- [ ] Базовая архитектура
+- [ ] Auth service
+- [ ] API Gateway
+- [ ] Message Service
+- [ ] Chat Service
+- [ ] Frontend
