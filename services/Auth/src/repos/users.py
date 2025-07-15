@@ -1,5 +1,6 @@
 from sqlalchemy.sql import select
 
+from schemas.users import UserCreate
 from src.models.users import UserOrm
 from src.repos.base import BaseRepository
 from src.repos.mappers.mappers import UserDataMapper
@@ -20,6 +21,17 @@ class UserRepository(BaseRepository):
             query = select(self.model).filter_by(login=login)
 
         result = await self.session.execute(query)
-        return [
-            self.mapper.map_to_domain_entity(model) for model in result.scalars().all()
-        ]
+        user = result.scalars().first()  # Get first result or None
+
+        if not user:
+            return None
+
+        return UserCreate(
+            login=user.login,
+            username=user.username,
+            email=user.email,
+            phone=user.phone,
+            hashed_password=user.hashed_password,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+        )
