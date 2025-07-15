@@ -3,10 +3,12 @@ from typing import Optional
 
 import jwt
 from passlib.context import CryptContext
-from src.config import settings
-from src.services.base import BaseService
 
-from schemas.users import UserResponse
+from database import async_session_maker
+from src.config import settings
+from src.schemas.users import UserResponse
+from src.services.base import BaseService
+from utils.db_manager import DbManager
 
 
 class AuthService(BaseService):
@@ -40,10 +42,17 @@ class AuthService(BaseService):
         except jwt.JWTError as e:
             raise jwt.JWTError(f'Could not validate credentials: {str(e)}')
 
-    def authenticate_user(self, username: str, password: str) -> Optional[UserResponse]:
+    async def get_user(self, username: str) -> Optional[UserResponse]:
+        async with DbManager(session_factory=async_session_maker) as db:
+            user: UserResponse = await db.users.get_user_with_hashedPwd(username)
+            return user
+
+    async def authenticate_user(
+        self, username: str, password: str
+    ) -> Optional[UserResponse]:
         """Возвращает схему пользователя по username и password"""
 
-        user = self.get_user(username)
+        user = await self.get_user(username)
         if not user:
             return None
         if not self.verify_password(password, user.hashed_password):

@@ -4,10 +4,12 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
+from database import async_session_maker
 from src.schemas.users import TokenData, UserResponse
 from src.services.auth import AuthService
+from utils.db_manager import DbManager
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/auth/token')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/token')
 
 auth_service = AuthService()
 
@@ -48,3 +50,11 @@ async def get_current_active_user(
 
 
 CurrentActiveUserDap = Annotated[UserResponse, Depends(get_current_active_user)]
+
+
+async def get_db():
+    async with DbManager(session_factory=async_session_maker) as db:
+        yield db
+
+
+DbDep = Annotated[DbManager, Depends(get_db)]
