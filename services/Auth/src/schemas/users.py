@@ -86,3 +86,4 @@ class TokenData(BaseModel):
     """Схема для данных в токене"""
 
     user_id: Optional[UUID] = None
+    username: str = None
