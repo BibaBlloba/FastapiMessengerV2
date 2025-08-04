@@ -14,7 +14,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/token')
 auth_service = AuthService()
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
+async def get_db():
+    async with DbManager(session_factory=async_session_maker) as db:
+        yield db
+
+
+DbDep = Annotated[DbManager, Depends(get_db)]
+
+
+async def get_current_user(
+    db: DbDep, token: str = Depends(oauth2_scheme)
+) -> UserResponse:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail='Could not validate credentials',
@@ -35,7 +45,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
     except jwt.JWTError:
         raise credentials_exception
 
-    user = await auth_service.get_user(username=token_data.username)
+    user = await db.users.get_user_without_pwd(token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -50,11 +60,3 @@ async def get_current_active_user(
 
 
 CurrentActiveUserDap = Annotated[UserResponse, Depends(get_current_active_user)]
-
-
-async def get_db():
-    async with DbManager(session_factory=async_session_maker) as db:
-        yield db
-
-
-DbDep = Annotated[DbManager, Depends(get_db)]
