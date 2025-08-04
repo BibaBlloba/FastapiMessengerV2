@@ -44,7 +44,7 @@ class AuthService(BaseService):
 
     async def get_user(self, username: str) -> Optional[UserResponse]:
         async with DbManager(session_factory=async_session_maker) as db:
-            user: UserResponse = await db.users.get_user_with_hashedPwd(username)
+            user: UserResponse = await db.users.get_user_without_pwd(username)
             return user
 
     async def authenticate_user(
